@@ -7,6 +7,7 @@ SCREEN_WIDTH, SCREEN_HEIGHT = 640, 480
 GRID_SIZE = 20
 GRID_WIDTH = SCREEN_WIDTH // GRID_SIZE
 GRID_HEIGHT = SCREEN_HEIGHT // GRID_SIZE
+CENTRAL_POSITION = (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)
 
 # Направления движения:
 UP = (0, -1)
@@ -55,6 +56,9 @@ def handle_keys(game_object):
                 game_object.next_direction = LEFT
             elif event.key == pygame.K_RIGHT and game_object.direction != LEFT:
                 game_object.next_direction = RIGHT
+            elif event.key == pygame.K_ESCAPE:  # Закрытие игры при нажатии ESC
+                pygame.quit()
+                raise SystemExit
 
 
 class GameObject:
@@ -62,7 +66,7 @@ class GameObject:
 
     def __init__(self, body_color=None, position=None):
         if position is None:
-            self.position = (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)
+            self.position = CENTRAL_POSITION
         else:
             self.position = position
         self.body_color = body_color
@@ -103,7 +107,7 @@ class Snake(GameObject):
         """Инициализация змейки с начальной длиной и направлением."""
         super().__init__(SNAKE_COLOR)
         self.length = 1
-        self.positions = [(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)]
+        self.positions = [CENTRAL_POSITION]
         self.direction = RIGHT
         self.next_direction = None
         self.last = None
@@ -147,7 +151,7 @@ class Snake(GameObject):
     def reset(self):
         """Сбрасывает параметры змейки до начальных значений."""
         self.length = 1
-        self.positions = [(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)]
+        self.positions = [CENTRAL_POSITION]
         self.direction = choice([LEFT, RIGHT, UP, DOWN])
         self.next_direction = None
 
@@ -176,21 +180,30 @@ def main():
     """
     # Инициализация PyGame:
     pygame.init()
-    # Тут нужно создать экземпляры классов.
+
+    # Создание экземпляров классов
     snake = Snake()
     apple = Apple()
+
+    high_score = 0
 
     while True:
         clock.tick(SPEED)
         handle_keys(snake)
         snake.update_direction()
         snake.move()
+
+        # Проверка на съеденное яблоко
         if snake.get_head_position() == apple.position:
             snake.length += 1
+            # Обновление рекорда
+            if snake.length > high_score:
+                high_score = snake.length
             while True:
                 apple.randomize_position()
                 if apple.position not in snake.positions:
                     break
+        pygame.display.set_caption(f'Змейка - Рекорд: {high_score}')
         snake.draw()
         apple.draw()
         pygame.display.update()
